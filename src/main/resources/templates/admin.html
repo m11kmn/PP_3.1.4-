@@ -124,12 +124,12 @@
 
                                                                     <div class="mb-3">
                                                                         <label for="password1"><strong>Password</strong></label>
-                                                                        <input type="password" class="form-control" id="password1" name="password" th:value="${user.password}">
+                                                                        <input type="password" class="form-control" id="password1" name="password">
                                                                     </div>
 
                                                                     <div class="mb-3">
                                                                         <label for="role1"><strong>Role</strong></label>
-                                                                        <select multiple class="form-control" id="role1" name="thisRole">
+                                                                        <select multiple class="form-control" id="role1" name="thisRole" required>
                                                                             <option th:each="role : ${listOfRoles}" th:value="${role.getId()}" th:text="${role.getAuthority()}"></option>
                                                                         </select>
                                                                     </div>
@@ -241,7 +241,7 @@
 
                                                 <div class="mb-3">
                                                     <label for="role"><strong>Role</strong></label>
-                                                    <select multiple class="form-control" id="role" name="thisRole">
+                                                    <select multiple class="form-control" id="role" name="thisRole" required>
                                                         <option th:each="role : ${listOfRoles}" th:value="${role.getId()}" th:text="${role.getAuthority()}"></option>
                                                     </select>
                                                 </div>
