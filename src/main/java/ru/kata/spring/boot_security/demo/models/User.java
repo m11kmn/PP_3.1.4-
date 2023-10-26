@@ -1,5 +1,6 @@
 package ru.kata.spring.boot_security.demo.models;
 
+import org.hibernate.annotations.Cascade;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -8,7 +9,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Entity
-@Table(name = "users")
+@Table(name = "User")
 public class User implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,42 +25,39 @@ public class User implements UserDetails {
     @Column(name = "age")
     private String age;
 
-    @Column(name = "email")
-    private String email;
-
     @Column(name = "username")
     private String username;
 
     @Column(name = "password")
     private String password;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.PERSIST, fetch=FetchType.EAGER)
-    private List<Role> role;
+    @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @JoinTable(name = "User_Role",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id"))
+    private Set<Role> roles;
+
+
 
     public User() {
 
     }
 
-    public User(String firstName, String lastName, String age, String email, String password) {
+    public User(String firstName, String lastName, String age, String username, String password) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.age = age;
-        this.email = email;
-        this.username = email;
+        this.username = username;
         this.password = password;
     }
 
     public void addRole(Role role) {
-        if (this.role == null) {
-            this.role = new ArrayList<>();
+        if (this.roles == null) {
+            this.roles = new HashSet<>();
         }
-        this.role.add(role);
-        role.setUser(this);
-    }
+        this.roles.add(role);
 
-    public String getRole() {
 
-        return role.stream().map(Role::getAuthority).map(x->x.substring(5)).collect(Collectors.joining(" "));
     }
 
     public Long getId() {
@@ -94,29 +92,22 @@ public class User implements UserDetails {
         this.age = age;
     }
 
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     public void setPassword(String password) {
         this.password = password;
     }
 
-    public void setRole(List<Role> role) {
-        this.role = role;
+    public String getRoles() {
+        return roles.stream()
+                .map(x -> x.getAuthority().replace("ROLE_", ""))
+                .collect(Collectors.joining(" "));
     }
 
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    @Override
-    public String toString() {
-        return firstName + lastName + email + age;
+    public void setRoles(Set<Role> roles) {
+        this.roles = roles;
     }
 
     ////////////////////////////////////////
@@ -125,7 +116,7 @@ public class User implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return role;
+        return roles;
     }
 
     @Override

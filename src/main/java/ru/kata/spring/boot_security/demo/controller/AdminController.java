@@ -9,42 +9,46 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import ru.kata.spring.boot_security.demo.models.Role;
 import ru.kata.spring.boot_security.demo.models.User;
+import ru.kata.spring.boot_security.demo.services.RolesService;
 import ru.kata.spring.boot_security.demo.services.UsersService;
+
+import javax.persistence.EntityManager;
+import javax.persistence.Query;
+import java.util.*;
 
 @Controller
 @RequestMapping("/admin") // users - это начальная страница
 public class AdminController {
     @Autowired
     private UsersService usersService;
+    @Autowired
+    private RolesService rolesService;
+    @Autowired
+    EntityManager entityManager;
 
     @GetMapping()
     public String showListOfUsers(Model model) {
+        List<Role> listOfRoles = entityManager.createQuery("from Role").getResultList();
+
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         User user = (User) authentication.getPrincipal();
+
+        model.addAttribute("listOfRoles", listOfRoles);
         model.addAttribute("user", user);
         model.addAttribute("newUser", new User());
         model.addAttribute("users", usersService.showListOfUsers());
         return "admin";
     }
 
-    @GetMapping("/user/{id}")
-    public String showUserInfo(@PathVariable("id") long id, Model model){
-        model.addAttribute("user", usersService.findUserById(id));
-        return "/user";
-    }
-
-//    @GetMapping("/admin")
-//    public String createUser(Model model) {
-//        model.addAttribute("user", new User());
-//        return "/new";
-//    }
-
     @PostMapping("/new")
-    public String createdUser(@ModelAttribute("user") User user) {
+    public String createdUser(@ModelAttribute("newUser") User newUser,
+                              @ModelAttribute("thisRole") Long roleId) {
+        Role role = rolesService.findRoleById(roleId);
 
-//        user.addRole(new Role("ROLE_USER"));
-//        user.addRole(new Role("ROLE_ADMIN"));
-        usersService.saveUser(user);
+        newUser.addRole(role);
+        role.getUsers().add(newUser);
+
+        usersService.saveUser(newUser);
 
         return "redirect:/admin";
     }
@@ -55,16 +59,18 @@ public class AdminController {
         return "redirect:/admin";
     }
 
-//    @GetMapping("/edit")
-//    public String updateUser(@RequestParam("id") long id, Model model) {
-//        model.addAttribute("user", usersService.findUserById(id));
-//        return "/edit";
-//    }
-
     @PostMapping ("/edit/{id}")
-    public String updateUser(@ModelAttribute("user") User user, @PathVariable("id") long id) {
-        System.out.println(user);
-        usersService.updateUser(id, user);
+    public String updateUser(@ModelAttribute("user") User user,
+                             @ModelAttribute("thisRole") Long roleId) {
+
+        Role role = rolesService.findRoleById(roleId);
+
+        role.getUsers().remove(user);
+
+        user.setRoles(new HashSet<>(Collections.singletonList(role)));
+        role.getUsers().add(user);
+
+        usersService.updateUser(user);
         return "redirect:/admin";
     }
 }

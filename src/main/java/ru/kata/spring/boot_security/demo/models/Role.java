@@ -1,14 +1,16 @@
 package ru.kata.spring.boot_security.demo.models;
 
+import org.hibernate.annotations.Cascade;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.persistence.*;
 import java.util.Collection;
+import java.util.Set;
 
 @Entity
 @Embeddable
-@Table(name = "roles")
+@Table(name = "Role")
 public class Role implements GrantedAuthority {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -18,16 +20,15 @@ public class Role implements GrantedAuthority {
     @Column(name = "role")
     private String role;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id", referencedColumnName = "id")
-    private User user;
-
-    public Role(String role) {
-        this.role = role;
-    }
+    @ManyToMany(mappedBy = "roles", fetch = FetchType.EAGER)
+    private Set<User> users;
 
     public Role() {
 
+    }
+
+    public Role(String role) {
+        this.role = role;
     }
 
     public Long getId() {
@@ -46,12 +47,12 @@ public class Role implements GrantedAuthority {
         this.role = role;
     }
 
-    public User getUser() {
-        return user;
+    public Set<User> getUsers() {
+        return users;
     }
 
-    public void setUser(User user) {
-        this.user = user;
+    public void setUsers(Set<User> users) {
+        this.users = users;
     }
 
     ////////////////////////////////////////////

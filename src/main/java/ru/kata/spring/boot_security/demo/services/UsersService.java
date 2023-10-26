@@ -1,6 +1,7 @@
 package ru.kata.spring.boot_security.demo.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.kata.spring.boot_security.demo.models.User;
@@ -12,8 +13,14 @@ import java.util.Optional;
 @Transactional(readOnly = true)
 public class UsersService {
 
+    private final UsersRepository usersRepository;
+    private final PasswordEncoder passwordEncoder;
+
     @Autowired
-    private UsersRepository usersRepository;
+    public UsersService(UsersRepository usersRepository, PasswordEncoder passwordEncoder) {
+        this.usersRepository = usersRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     public List<User> showListOfUsers() {
         return usersRepository.findAll();
@@ -26,13 +33,15 @@ public class UsersService {
 
     @Transactional
     public void saveUser(User user) {
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         usersRepository.save(user);
     }
 
     @Transactional
-    public void updateUser(Long id, User updatedUser) {
-        updatedUser.setId(id);
+    public void updateUser(User updatedUser) {
+        updatedUser.setPassword(passwordEncoder.encode(updatedUser.getPassword()));
         usersRepository.save(updatedUser);
+
     }
 
     @Transactional
